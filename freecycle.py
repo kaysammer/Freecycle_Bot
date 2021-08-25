@@ -1,11 +1,30 @@
+import json
+
 import requests
 from lxml import html
+import re
 
 USERNAME = "kayfelix"
 PASSWORD = "*******"
 
 LOGIN_URL = "https://www.freecycle.org/login"
 URL = "https://www.freecycle.org/home/dashboard"
+
+
+def convert_html_to_dict(txt_html):
+    """Read in free cycle html as a string output a dictionary.
+
+    keys are:
+        'count', 'posts', 'tags', 'towns', 'blockedUsers', 'criteria', 'suppressAds'
+    """
+    txt_html = txt_html.replace('&quot;', '"')
+    ss = re.search("<fc-data :data=\"(.*)\" :limit=\d+ context=\"posts\".*?</fc-data>", txt_html)
+    txt_reduced = ss.groups()[0]
+
+    # Read text as in as json format and return a dictionary
+    data = json.loads(txt_reduced)
+    return data
+
 
 def main():
     session_requests = requests.session()
@@ -30,7 +49,8 @@ def main():
     tree = html.fromstring(result.content)
     # bucket_names = tree.xpath("//div[@class='repo-list--repo']/a/text()")
 
-    print(result.content)
+    freecycle_dict = convert_html_to_dict(result.text)
+    print(freecycle_dict)
 
 
 if __name__ == '__main__':
